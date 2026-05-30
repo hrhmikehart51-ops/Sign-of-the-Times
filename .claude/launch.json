@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "/Applications/Codex.app/Contents/Resources/node",
+      "runtimeArgs": ["scripts/next-wasm-dev.mjs"],
+      "port": 3000
+    }
+  ]
+}
