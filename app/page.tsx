@@ -196,6 +196,7 @@ export default function Home() {
               ["#services", "Services"],
               ["#pricing", "Pricing"],
               ["#how-it-works", "How it works"],
+              ["/design", "Design a sign"],
               ["#quote", "Get a quote"],
             ].map(([href, label]) => (
               <a key={href} href={href}
