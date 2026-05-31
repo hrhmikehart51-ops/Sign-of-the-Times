@@ -38,7 +38,7 @@ const SERVICES = [
     desc: "Full-color vinyl banners for grand openings, events, storefronts, and promotions.",
     price: "",
     detail: "24×36 · 36×48 · Custom sizes",
-    popular: true,
+    popular: false,
   },
   {
     icon: "🏡",
@@ -106,8 +106,8 @@ const WHY_US = [
   },
   {
     icon: "✅",
-    title: "Proof before every print",
-    body: "You see and approve a digital proof before anything goes to press. No surprises, ever.",
+    title: "Proof with every new design",
+    body: "Every new design gets a digital proof you approve before we print. Reorders go straight to press.",
   },
   {
     icon: "⚡",
@@ -256,7 +256,7 @@ export default function Home() {
 
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300">
               Banners, yard signs, vehicle lettering, real estate signs, window graphics, stickers, and more.
-              Walk-in friendly. Expert advice in person. Proof before every print.
+              Walk-in friendly. Expert advice in person. Proof with every new design.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
@@ -293,7 +293,7 @@ export default function Home() {
             {/* Trust row */}
             <div className="mt-12 flex flex-wrap gap-x-8 gap-y-3">
               {[
-                { icon: "✅", text: "Proof before printing" },
+                { icon: "✅", text: "Proof on new designs" },
                 { icon: "⚡", text: "Fast turnaround" },
                 { icon: "📍", text: "Local Vancouver shop" },
                 { icon: "🎨", text: "Full-color printing" },
