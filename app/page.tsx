@@ -134,8 +134,8 @@ const STEPS = [
   },
   {
     n: "03",
-    title: "Pick it up or we deliver",
-    body: "Once you approve the proof, we go to press. Most orders are ready within days. Pick up at the shop or ask about delivery.",
+    title: "Pick it up at the shop",
+    body: "Once you approve the proof, we go to press. Most orders are ready within days — swing by during business hours to pick it up.",
   },
 ];
 

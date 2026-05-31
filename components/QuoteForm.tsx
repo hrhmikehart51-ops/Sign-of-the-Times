@@ -1,7 +1,34 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { materials, products, sizes } from "@/lib/business";
+import { materials, products } from "@/lib/business";
+
+// ── Which products get which extra options ────────────────────────────────────
+
+const PRODUCTS_WITH_SIDES = new Set([
+  "Banners",
+  "A-frame signs",
+  "Real estate signs",
+  "Yard signs",
+  "Storefront signage",
+  "Custom signs",
+]);
+
+const PRODUCTS_WITH_GROMMETS = new Set([
+  "Banners",
+  "Custom signs",
+]);
+
+const PRESET_SIZES = [
+  "18×24 in",
+  "24×36 in",
+  "36×48 in",
+  "2×4 ft",
+  "3×6 ft",
+  "4×8 ft",
+];
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type FormState = {
   customerName: string;
@@ -11,6 +38,8 @@ type FormState = {
   size: string;
   material: string;
   quantity: string;
+  sided: string;
+  grommets: string;
   dateNeeded: string;
   preferredConsultTime: string;
   notes: string;
@@ -21,9 +50,11 @@ const INITIAL: FormState = {
   email: "",
   phone: "",
   productType: "Banners",
-  size: "",
+  size: "24×36 in",
   material: "Banner material",
   quantity: "1",
+  sided: "",
+  grommets: "",
   dateNeeded: "",
   preferredConsultTime: "",
   notes: "",
@@ -40,8 +71,11 @@ const CONSULT_SLOTS = [
   "Friday afternoon (12:00–4:30)",
 ];
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function QuoteForm() {
   const [form, setForm] = useState<FormState>(INITIAL);
+  const [isCustomSize, setIsCustomSize] = useState(false);
   const [artwork, setArtwork] = useState<File | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [busy, setBusy] = useState(false);
@@ -49,8 +83,19 @@ export default function QuoteForm() {
   const [serverError, setServerError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const showSides    = PRODUCTS_WITH_SIDES.has(form.productType);
+  const showGrommets = PRODUCTS_WITH_GROMMETS.has(form.productType);
+
   function set(key: keyof FormState, value: string) {
-    setForm((f) => ({ ...f, [key]: value }));
+    setForm((f) => {
+      const next = { ...f, [key]: value };
+      // Clear sided/grommets when switching to a product that doesn't support them
+      if (key === "productType") {
+        if (!PRODUCTS_WITH_SIDES.has(value))    next.sided = "";
+        if (!PRODUCTS_WITH_GROMMETS.has(value)) next.grommets = "";
+      }
+      return next;
+    });
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   }
 
@@ -62,6 +107,7 @@ export default function QuoteForm() {
     if (!form.productType) next.productType = "Required";
     if (!form.quantity || Number(form.quantity) < 1) next.quantity = "At least 1";
     if (!form.dateNeeded.trim()) next.dateNeeded = "Required";
+    if (isCustomSize && !form.size.trim()) next.size = "Enter your custom size";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -107,7 +153,7 @@ export default function QuoteForm() {
         </p>
         <button
           className="mt-6 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-700"
-          onClick={() => { setSuccess(false); setForm(INITIAL); setArtwork(null); }}
+          onClick={() => { setSuccess(false); setForm(INITIAL); setArtwork(null); setIsCustomSize(false); }}
           type="button"
         >
           Submit another request
@@ -143,20 +189,42 @@ export default function QuoteForm() {
 
           {/* Job specs */}
           <Section label="What do you need?">
+
             <Field label="Product type" error={errors.productType}>
               <select className={input(errors.productType)} value={form.productType}
                 onChange={e => set("productType", e.target.value)}>
                 {products.map(p => <option key={p}>{p}</option>)}
               </select>
             </Field>
+
+            {/* Size / Material / Qty */}
             <div className="grid grid-cols-3 gap-3">
-              <Field label="Size">
-                <input
-                  className={input()}
-                  value={form.size}
-                  onChange={e => set("size", e.target.value)}
-                  placeholder="e.g. 24×36 in"
-                />
+              <Field label="Size" error={errors.size}>
+                <select
+                  className={input(errors.size)}
+                  value={isCustomSize ? "Custom…" : form.size}
+                  onChange={e => {
+                    if (e.target.value === "Custom…") {
+                      setIsCustomSize(true);
+                      set("size", "");
+                    } else {
+                      setIsCustomSize(false);
+                      set("size", e.target.value);
+                    }
+                  }}
+                >
+                  {PRESET_SIZES.map(s => <option key={s}>{s}</option>)}
+                  <option value="Custom…">Custom…</option>
+                </select>
+                {isCustomSize && (
+                  <input
+                    className={`mt-1.5 ${input(errors.size)}`}
+                    value={form.size}
+                    onChange={e => set("size", e.target.value)}
+                    placeholder="e.g. 3×10 ft"
+                    autoFocus
+                  />
+                )}
               </Field>
               <Field label="Material">
                 <select className={input()} value={form.material}
@@ -169,6 +237,29 @@ export default function QuoteForm() {
                   value={form.quantity} onChange={e => set("quantity", e.target.value)} />
               </Field>
             </div>
+
+            {/* Sided + Grommets — only for relevant products */}
+            {(showSides || showGrommets) && (
+              <div className={`grid gap-3 ${showSides && showGrommets ? "grid-cols-2" : "grid-cols-1"}`}>
+                {showSides && (
+                  <TogglePair
+                    label="Sides"
+                    value={form.sided}
+                    onChange={v => set("sided", v)}
+                    options={["Single-sided", "Double-sided"]}
+                  />
+                )}
+                {showGrommets && (
+                  <TogglePair
+                    label="Grommets"
+                    value={form.grommets}
+                    onChange={v => set("grommets", v)}
+                    options={["With grommets", "Without grommets"]}
+                  />
+                )}
+              </div>
+            )}
+
             <Field label="Notes / design details">
               <textarea
                 className={`${input()} min-h-[80px] resize-none`}
@@ -313,5 +404,39 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       {children}
       {error && <span className="mt-1 block text-xs font-medium text-red-600">{error}</span>}
     </label>
+  );
+}
+
+function TogglePair({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: [string, string];
+}) {
+  return (
+    <div>
+      <p className="mb-1 text-xs font-semibold text-slate-600">{label}</p>
+      <div className="flex gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onChange(value === opt ? "" : opt)}
+            className={`flex-1 rounded-lg border px-2 py-2 text-xs font-semibold transition ${
+              value === opt
+                ? "border-marine bg-marine text-white"
+                : "border-slate-200 bg-white text-slate-600 hover:border-marine/40 hover:text-marine"
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
