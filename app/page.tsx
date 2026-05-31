@@ -106,8 +106,8 @@ const WHY_US = [
   },
   {
     icon: "✅",
-    title: "Proof with every new design",
-    body: "Every new design gets a digital proof you approve before we print. Reorders go straight to press.",
+    title: "Your OK before we print",
+    body: "We work through the design with you — in person or over email — and nothing goes to press until you're happy with it.",
   },
   {
     icon: "⚡",
@@ -130,12 +130,12 @@ const STEPS = [
   {
     n: "02",
     title: "We design it together",
-    body: "In person or over email, we'll nail down the copy, size, material, and layout. You get a digital proof before anything is printed.",
+    body: "In person or over email, we'll nail down the copy, size, material, and layout. We don't go to press until you sign off.",
   },
   {
     n: "03",
     title: "Pick it up at the shop",
-    body: "Once you approve the proof, we go to press. Most orders are ready within days — swing by during business hours to pick it up.",
+    body: "Once you're happy with the design, we go to press. Most orders are ready within days — swing by during business hours to pick it up.",
   },
 ];
 
@@ -194,7 +194,6 @@ export default function Home() {
           <nav className="hidden items-center gap-7 md:flex">
             {[
               ["#services", "Services"],
-              ["#pricing", "Pricing"],
               ["#how-it-works", "How it works"],
               ["/design", "Design a sign"],
               ["#quote", "Get a quote"],
@@ -256,7 +255,7 @@ export default function Home() {
 
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300">
               Banners, yard signs, vehicle lettering, real estate signs, window graphics, stickers, and more.
-              Walk-in friendly. Expert advice in person. Proof with every new design.
+              Walk-in friendly. Expert advice in person. Nothing goes to press until you sign off.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
@@ -293,7 +292,7 @@ export default function Home() {
             {/* Trust row */}
             <div className="mt-12 flex flex-wrap gap-x-8 gap-y-3">
               {[
-                { icon: "✅", text: "Proof on new designs" },
+                { icon: "✅", text: "You sign off before we print" },
                 { icon: "⚡", text: "Fast turnaround" },
                 { icon: "📍", text: "Local Vancouver shop" },
                 { icon: "🎨", text: "Full-color printing" },
@@ -339,18 +338,10 @@ export default function Home() {
       <section id="services" className="bg-slate-50 py-16">
         <div id="pricing" className="mx-auto max-w-6xl px-5">
           <SectionHeader
-            eyebrow="Services &amp; pricing"
+            eyebrow="Services"
             title="What we make"
-            sub="Pricing shown below — exact quotes depend on quantity, size, material, and complexity."
+            sub="Pricing depends on size, material, and quantity — request a quote for an exact number."
           />
-
-          {/* Pricing note banner */}
-          <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-signal/30 bg-signal/10 px-5 py-3 text-center">
-            <p className="text-sm text-amber-800">
-              <span className="font-bold">Pricing coming soon.</span>{" "}
-              Fill out the quote form below or call <strong>360-891-9477</strong> for exact pricing on your project.
-            </p>
-          </div>
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {SERVICES.map((s) => (
@@ -377,24 +368,12 @@ export default function Home() {
                 <p className="mt-1 flex-1 text-xs leading-relaxed text-slate-500">{s.desc}</p>
 
                 <div className="mt-4 border-t border-slate-100 pt-3">
-                  <div className="flex items-baseline justify-between">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Starting at</p>
-                      {s.price ? (
-                        <p className="text-xl font-black text-marine" style={{ fontFamily: "'Oswald', sans-serif" }}>
-                          {s.price}
-                        </p>
-                      ) : (
-                        <div className="mt-1 h-5 w-20 rounded bg-slate-100" title="Pricing coming soon" />
-                      )}
-                    </div>
-                    <p className="text-right text-[10px] text-slate-400 leading-tight max-w-[90px]">{s.detail}</p>
-                  </div>
+                  <p className="mb-3 text-xs text-slate-400">{s.detail}</p>
                   <a
                     href="#quote"
-                    className="mt-3 block rounded-lg border border-marine/30 bg-marine/5 px-3 py-2 text-center text-xs font-bold text-marine transition hover:bg-marine hover:text-white"
+                    className="block rounded-lg border border-marine/30 bg-marine/5 px-3 py-2 text-center text-xs font-bold text-marine transition hover:bg-marine hover:text-white"
                   >
-                    Request quote →
+                    Request a quote →
                   </a>
                 </div>
               </div>
@@ -402,9 +381,9 @@ export default function Home() {
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-400">
-            Volume discounts available on most products.{" "}
+            Every job is custom quoted.{" "}
             <a className="font-semibold text-marine hover:underline" href="tel:3608919477">Call us</a>{" "}
-            or use the quote form below for exact pricing.
+            or use the quote form below and we'll get back to you with exact pricing.
           </p>
         </div>
       </section>

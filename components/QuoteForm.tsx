@@ -344,13 +344,13 @@ export default function QuoteForm() {
               {(form.orderType === "Reorder"
                 ? [
                     "We receive your request and reach out within one business day.",
-                    "We'll confirm your existing design and quantity — no proof needed unless you're making changes.",
-                    "Once confirmed, we go straight to print. Come pick it up when it's ready.",
+                    "We'll confirm your existing design and quantity — let us know if anything needs changing.",
+                    "Once confirmed, we go to press. Come pick it up when it's ready.",
                   ]
                 : [
                     "We receive your request and reach out within one business day.",
-                    "We'll go over your design — by phone or even better, in person at the shop.",
-                    "You get a digital proof to approve before anything goes to press. Every new design gets one.",
+                    "We'll work through the design with you — by phone or even better, in person at the shop.",
+                    "Nothing goes to press until you're happy with it.",
                   ]
               ).map((step, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-xs text-slate-500">
@@ -361,11 +361,6 @@ export default function QuoteForm() {
                 </li>
               ))}
             </ol>
-            {form.orderType === "New design" && (
-              <p className="mt-3 rounded-lg bg-signal/10 px-3 py-2 text-xs font-medium text-ink">
-                ✓ Every new design includes a digital proof — you approve it before we print anything.
-              </p>
-            )}
           </div>
 
           {/* CTA */}
