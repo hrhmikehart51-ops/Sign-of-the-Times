@@ -6,8 +6,8 @@ import { businessInfo } from "@/lib/business";
 const CANVA_TEMPLATES = [
   { name: "Banner", desc: "24×36 · 36×48 · Custom sizes", icon: "🚩", embedUrl: "", templateUrl: "https://www.canva.com/create/banners/" },
   { name: "Yard Sign", desc: "18×24 standard · stake-ready", icon: "📋", embedUrl: "", templateUrl: "https://www.canva.com/create/yard-signs/" },
-  { name: "Real Estate Sign", desc: "18×24 Correx · open house · for sale", icon: "🏡", embedUrl: "", templateUrl: "https://www.canva.com/create/real-estate-signs/" },
-  { name: "Window Graphic", desc: "Custom size · indoor & outdoor", icon: "🪟", embedUrl: "", templateUrl: "https://www.canva.com/create/window-graphics/" },
+  { name: "Real Estate Sign", desc: "18×24 Correx · open house · for sale", icon: "🏡", embedUrl: "", templateUrl: "https://www.canva.com/templates/?query=real+estate+sign" },
+  { name: "Window Graphic", desc: "Custom size · indoor & outdoor", icon: "🪟", embedUrl: "", templateUrl: "https://www.canva.com/templates/?query=window+sign" },
   { name: "Stickers & Decals", desc: "Die-cut · rectangular · any shape", icon: "🎨", embedUrl: "", templateUrl: "https://www.canva.com/create/stickers/" },
 ];
 
