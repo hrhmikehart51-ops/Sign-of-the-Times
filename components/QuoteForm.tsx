@@ -21,7 +21,7 @@ const INITIAL: FormState = {
   email: "",
   phone: "",
   productType: "Banners",
-  size: "24x36",
+  size: "",
   material: "Banner material",
   quantity: "1",
   dateNeeded: "",
@@ -151,10 +151,12 @@ export default function QuoteForm() {
             </Field>
             <div className="grid grid-cols-3 gap-3">
               <Field label="Size">
-                <select className={input()} value={form.size}
-                  onChange={e => set("size", e.target.value)}>
-                  {sizes.map(s => <option key={s}>{s}</option>)}
-                </select>
+                <input
+                  className={input()}
+                  value={form.size}
+                  onChange={e => set("size", e.target.value)}
+                  placeholder="e.g. 24×36 in"
+                />
               </Field>
               <Field label="Material">
                 <select className={input()} value={form.material}
@@ -219,7 +221,7 @@ export default function QuoteForm() {
               ) : (
                 <div>
                   <p className="text-sm font-semibold text-slate-600">Drop your logo or artwork here</p>
-                  <p className="text-xs text-slate-400">JPEG, PNG, PDF, SVG, AI, EPS · up to 25 MB</p>
+                  <p className="text-xs text-slate-400">JPEG preferred · PNG, PDF, SVG, AI, EPS also accepted · up to 25 MB</p>
                 </div>
               )}
             </div>
