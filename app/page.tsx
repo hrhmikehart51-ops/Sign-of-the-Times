@@ -404,9 +404,9 @@ export default function Home() {
       <section id="how-it-works" className="bg-white py-16">
         <div className="mx-auto max-w-6xl px-5">
           <SectionHeader
-            eyebrow="Simple process"
-            title="From request to finished sign"
-            sub="No complicated online configurators. Just tell us what you need."
+            eyebrow="How it works"
+            title="Simple. Local. Done right."
+            sub="Walk in or send a request — we handle the design, the proof, and the print."
           />
           <div className="relative mt-12 grid gap-6 md:grid-cols-3">
             {/* Connector line on desktop */}

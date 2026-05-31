@@ -8,6 +8,7 @@ const CANVA_TEMPLATES = [
   { name: "Yard Sign", desc: "18×24 standard · stake-ready", icon: "📋", embedUrl: "", templateUrl: "https://www.canva.com/create/yard-signs/" },
   { name: "Real Estate Sign", desc: "18×24 Correx · open house · for sale", icon: "🏡", embedUrl: "", templateUrl: "https://www.canva.com/create/real-estate-signs/" },
   { name: "Window Graphic", desc: "Custom size · indoor & outdoor", icon: "🪟", embedUrl: "", templateUrl: "https://www.canva.com/create/window-graphics/" },
+  { name: "Stickers & Decals", desc: "Die-cut · rectangular · any shape", icon: "🎨", embedUrl: "", templateUrl: "https://www.canva.com/create/stickers/" },
 ];
 
 const STEPS = [
