@@ -37,18 +37,28 @@ export async function sendQuoteEmail({
   }
 
   try {
-    await sendViaGmailSmtp({
-      user,
-      pass,
-      to,
-      subject: `New quote request: ${quote.productType} — ${quote.customerName}`,
-      html: buildEmailHtml(submissionId, quote, files),
-      attachments: files.map((f) => ({
-        filename: f.originalName,
-        contentType: f.type || "application/octet-stream",
-        data: f.buffer,
-      })),
-    });
+    // Send both emails in parallel — shop notification + customer confirmation
+    await Promise.all([
+      sendViaGmailSmtp({
+        user,
+        pass,
+        to,
+        subject: `New quote request: ${quote.productType} — ${quote.customerName}`,
+        html: buildEmailHtml(submissionId, quote, files),
+        attachments: files.map((f) => ({
+          filename: f.originalName,
+          contentType: f.type || "application/octet-stream",
+          data: f.buffer,
+        })),
+      }),
+      sendViaGmailSmtp({
+        user,
+        pass,
+        to: quote.email,
+        subject: `We received your quote request — Sign of the Times`,
+        html: buildConfirmationHtml(quote),
+      }),
+    ]);
     return { configured: true, sent: true, provider: "gmail" };
   } catch (err) {
     return {
@@ -227,7 +237,90 @@ function encodeRFC2047(name: string) {
   return `=?utf-8?B?${b64(name)}?=`;
 }
 
-// ── Email HTML template ───────────────────────────────────────────────────────
+// ── Customer confirmation email ───────────────────────────────────────────────
+
+function buildConfirmationHtml(quote: QuotePayload) {
+  const details: [string, string][] = [
+    ["Product", quote.productType],
+    ["Size", quote.size],
+    ["Material", quote.material],
+    ["Quantity", String(quote.quantity)],
+    ...(quote.sided    ? [["Sides", quote.sided]    as [string, string]] : []),
+    ...(quote.grommets ? [["Grommets", quote.grommets] as [string, string]] : []),
+    ["Date needed", quote.dateNeeded],
+    ...(quote.preferredConsultTime
+      ? [["Consult time", quote.preferredConsultTime] as [string, string]]
+      : []),
+    ...(quote.notes ? [["Notes", quote.notes] as [string, string]] : []),
+  ];
+
+  const tableRows = details
+    .map(
+      ([label, value]) => `
+      <tr>
+        <th style="border:1px solid #e5e7eb;padding:9px 12px;text-align:left;
+                   background:#f9fafb;width:140px;font-size:13px;color:#374151">
+          ${esc(label)}
+        </th>
+        <td style="border:1px solid #e5e7eb;padding:9px 12px;font-size:13px;color:#111827">
+          ${esc(value)}
+        </td>
+      </tr>`
+    )
+    .join("");
+
+  return `
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827;max-width:640px">
+
+      <div style="background:#102033;padding:20px 28px;border-radius:8px 8px 0 0">
+        <h1 style="margin:0;font-size:20px;color:#F4B400;letter-spacing:1px">
+          SIGN OF THE TIMES
+        </h1>
+        <p style="margin:4px 0 0;font-size:13px;color:#94a3b8">
+          Vancouver, WA · 360-891-9477
+        </p>
+      </div>
+
+      <div style="border:1px solid #e5e7eb;border-top:none;padding:28px;border-radius:0 0 8px 8px">
+        <p style="font-size:16px;margin:0 0 6px">
+          Hi <strong>${esc(quote.customerName)}</strong>,
+        </p>
+        <p style="font-size:14px;color:#374151;margin:0 0 20px">
+          Thanks for reaching out! We received your quote request and will be in touch
+          within one business day. Here's a summary of what you submitted:
+        </p>
+
+        <table style="border-collapse:collapse;width:100%;margin-bottom:24px">
+          ${tableRows}
+        </table>
+
+        <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px 20px;margin-bottom:20px">
+          <p style="margin:0 0 6px;font-size:13px;font-weight:bold;color:#0369a1">
+            Want to move faster?
+          </p>
+          <p style="margin:0;font-size:13px;color:#0c4a6e">
+            Stop by the shop at <strong>5809 NE 105th Ave, Vancouver WA</strong> —
+            no appointment needed. We're open <strong>Tuesday–Friday, 9:30 AM–4:30 PM</strong>.
+            Walk-ins always welcome.
+          </p>
+        </div>
+
+        <p style="font-size:13px;color:#6b7280;margin:0">
+          Questions? Reply to this email or call us at
+          <strong>360-891-9477</strong>.
+        </p>
+
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+        <p style="font-size:11px;color:#9ca3af;margin:0">
+          Sign of the Times · 5809 NE 105th Ave, Vancouver WA 98662 ·
+          <a href="mailto:signswa@yahoo.com" style="color:#9ca3af">signswa@yahoo.com</a>
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// ── Shop notification email ───────────────────────────────────────────────────
 
 function buildEmailHtml(
   submissionId: string,
@@ -243,6 +336,8 @@ function buildEmailHtml(
     ["Size", quote.size],
     ["Material", quote.material],
     ["Quantity", String(quote.quantity)],
+    ...(quote.sided    ? [["Sides", quote.sided]       as [string, string]] : []),
+    ...(quote.grommets ? [["Grommets", quote.grommets] as [string, string]] : []),
     ["Date needed", quote.dateNeeded],
     ["Preferred consult time", quote.preferredConsultTime || "Not requested"],
     ["Notes", quote.notes || "None"],

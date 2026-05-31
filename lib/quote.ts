@@ -1,4 +1,4 @@
-import { products, materials, sizes } from "@/lib/business";
+import { products, materials } from "@/lib/business";
 import { dataUrlToSavedUpload, fileToSavedUpload, type SavedUpload } from "@/lib/uploads";
 
 export type QuotePayload = {
@@ -9,6 +9,8 @@ export type QuotePayload = {
   size: string;
   material: string;
   quantity: number;
+  sided: string;
+  grommets: string;
   dateNeeded: string;
   preferredConsultTime: string;
   notes: string;
@@ -66,9 +68,7 @@ export function validateQuotePayload(payload: QuotePayload) {
     errors.productType = "Choose a supported product type.";
   }
 
-  if (payload.size && !(sizes as readonly string[]).includes(payload.size)) {
-    errors.size = "Choose a supported size.";
-  }
+  // Size is free-text (custom sizes allowed) — only check it's non-empty (covered above)
 
   if (payload.material && !(materials as readonly string[]).includes(payload.material)) {
     errors.material = "Choose a supported material.";
@@ -86,9 +86,11 @@ export async function parseMultipartQuote(formData: FormData): Promise<ParsedQuo
     size: valueFromForm(formData, "size"),
     material: valueFromForm(formData, "material"),
     quantity: Number.parseInt(valueFromForm(formData, "quantity"), 10),
+    sided: valueFromForm(formData, "sided"),
+    grommets: valueFromForm(formData, "grommets"),
     dateNeeded: valueFromForm(formData, "dateNeeded"),
     preferredConsultTime: valueFromForm(formData, "preferredConsultTime"),
-    notes: valueFromForm(formData, "notes")
+    notes: valueFromForm(formData, "notes"),
   };
 
   const errors = validateQuotePayload(quote);
@@ -129,9 +131,11 @@ export async function parseJsonQuote(body: unknown): Promise<ParsedQuoteSubmissi
     size: String(source.size || "").trim(),
     material: String(source.material || "").trim(),
     quantity: Number.parseInt(String(source.quantity || ""), 10),
+    sided: String(source.sided || "").trim(),
+    grommets: String(source.grommets || "").trim(),
     dateNeeded: String(source.dateNeeded || "").trim(),
     preferredConsultTime: String(source.preferredConsultTime || "").trim(),
-    notes: String(source.notes || "").trim()
+    notes: String(source.notes || "").trim(),
   };
 
   const errors = validateQuotePayload(quote);
