@@ -43,6 +43,11 @@ export async function sendQuoteEmail({
       to,
       subject: `New quote request: ${quote.productType} — ${quote.customerName}`,
       html: buildEmailHtml(submissionId, quote, files),
+      attachments: files.map((f) => ({
+        filename: f.originalName,
+        contentType: f.type || "application/octet-stream",
+        data: f.buffer,
+      })),
     });
     return { configured: true, sent: true, provider: "gmail" };
   } catch (err) {
@@ -55,7 +60,13 @@ export async function sendQuoteEmail({
   }
 }
 
-// ── Raw Gmail SMTP over port 465 (implicit TLS) — no packages needed ────────
+// ── Raw Gmail SMTP over port 465 (implicit TLS) with MIME attachments ────────
+
+type Attachment = {
+  filename: string;
+  contentType: string;
+  data: Buffer;
+};
 
 async function sendViaGmailSmtp(cfg: {
   user: string;
@@ -63,6 +74,64 @@ async function sendViaGmailSmtp(cfg: {
   to: string;
   subject: string;
   html: string;
+  attachments?: Attachment[];
+}): Promise<void> {
+  const boundary = `----=_Part_${Date.now().toString(36)}`;
+
+  // Build multipart/mixed MIME body
+  const parts: string[] = [];
+
+  // HTML part
+  parts.push(
+    [
+      `--${boundary}`,
+      "Content-Type: text/html; charset=utf-8",
+      "Content-Transfer-Encoding: quoted-printable",
+      "",
+      encodeQP(cfg.html),
+    ].join("\r\n")
+  );
+
+  // Attachment parts
+  for (const att of cfg.attachments ?? []) {
+    const encoded = att.data.toString("base64");
+    // Split base64 into 76-char lines (RFC 2045)
+    const lines = encoded.match(/.{1,76}/g)?.join("\r\n") ?? encoded;
+    const safeName = encodeRFC2047(att.filename);
+    parts.push(
+      [
+        `--${boundary}`,
+        `Content-Type: ${att.contentType}; name="${safeName}"`,
+        `Content-Disposition: attachment; filename="${safeName}"`,
+        "Content-Transfer-Encoding: base64",
+        "",
+        lines,
+      ].join("\r\n")
+    );
+  }
+
+  const body = parts.join("\r\n") + `\r\n--${boundary}--`;
+
+  const headers = [
+    `From: ${businessInfo.name} <${cfg.user}>`,
+    `To: ${cfg.to}`,
+    `Subject: =?utf-8?B?${b64(cfg.subject)}?=`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    "",
+    body,
+  ].join("\r\n");
+
+  return smtpSend({ user: cfg.user, pass: cfg.pass, to: cfg.to, raw: headers });
+}
+
+// ── Core SMTP state-machine ───────────────────────────────────────────────────
+
+function smtpSend(cfg: {
+  user: string;
+  pass: string;
+  to: string;
+  raw: string;
 }): Promise<void> {
   return new Promise((resolve, reject) => {
     let state = 0;
@@ -76,28 +145,21 @@ async function sendViaGmailSmtp(cfg: {
     function done(err?: Error) {
       if (settled) return;
       settled = true;
-      if (err) {
-        socket.destroy();
-        reject(err);
-      } else {
-        socket.end();
-        resolve();
-      }
-    }
-
-    function b64(s: string) {
-      return Buffer.from(s).toString("base64");
+      if (err) { socket.destroy(); reject(err); }
+      else     { socket.end();     resolve();    }
     }
 
     function send(line: string) {
       socket.write(line + "\r\n");
     }
 
-    // Each step fires after the previous server response clears
+    // Dot-stuff: any line beginning with "." needs an extra "."
+    const safeBody = cfg.raw.replace(/(^|\r\n)\./g, "$1..");
+
     const steps: Array<() => void> = [
       // [0] After 220 greeting
       () => send("EHLO mail.sign-of-the-times.local"),
-      // [1] After 250 EHLO (may be multi-line — handled below)
+      // [1] After 250 EHLO (multi-line — waits for last line)
       () => send("AUTH LOGIN"),
       // [2] After 334 username prompt
       () => send(b64(cfg.user)),
@@ -109,50 +171,29 @@ async function sendViaGmailSmtp(cfg: {
       () => send(`RCPT TO:<${cfg.to}>`),
       // [6] After 250 RCPT TO
       () => send("DATA"),
-      // [7] After 354 — send headers + body
-      () => {
-        // Dot-stuffing: a line that starts with "." must be doubled
-        const safeBody = cfg.html.replace(/(^|\r\n)\./g, "$1..");
-        const msg = [
-          `From: ${businessInfo.name} <${cfg.user}>`,
-          `To: ${cfg.to}`,
-          `Subject: =?utf-8?B?${b64(cfg.subject)}?=`,
-          "MIME-Version: 1.0",
-          "Content-Type: text/html; charset=utf-8",
-          "",
-          safeBody,
-        ].join("\r\n");
-        socket.write(msg + "\r\n.\r\n");
-      },
+      // [7] After 354 — send full message then terminator
+      () => socket.write(safeBody + "\r\n.\r\n"),
       // [8] After 250 message accepted
       () => send("QUIT"),
       // [9] After 221 bye
       () => done(),
     ];
 
-    socket.setTimeout(20_000);
+    socket.setTimeout(30_000);
     socket.on("timeout", () => done(new Error("SMTP connection timed out")));
     socket.on("error", (err) => done(err));
 
     socket.on("data", (chunk: Buffer) => {
       buf += chunk.toString();
-
-      // Process complete SMTP response lines
       let idx: number;
       while ((idx = buf.indexOf("\r\n")) !== -1) {
         const line = buf.slice(0, idx);
         buf = buf.slice(idx + 2);
-
         const code = parseInt(line.slice(0, 3), 10);
         const continued = line[3] === "-"; // "250-..." = more lines coming
-
         if (!continued) {
-          if (code >= 400) {
-            done(new Error(`SMTP ${code}: ${line.trim()}`));
-            return;
-          }
-          const step = steps[state];
-          state++;
+          if (code >= 400) { done(new Error(`SMTP ${code}: ${line.trim()}`)); return; }
+          const step = steps[state++];
           if (step) step();
         }
       }
@@ -160,7 +201,33 @@ async function sendViaGmailSmtp(cfg: {
   });
 }
 
-// ── Email HTML builder ────────────────────────────────────────────────────────
+// ── Encoding helpers ──────────────────────────────────────────────────────────
+
+function b64(s: string) {
+  return Buffer.from(s).toString("base64");
+}
+
+/** Quoted-printable encode (for HTML body — keeps it readable in email clients) */
+function encodeQP(input: string): string {
+  return input
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, (c) => {
+      const hex = c.codePointAt(0)!.toString(16).toUpperCase();
+      // Multi-byte UTF-8 characters
+      const bytes = Buffer.from(c, "utf8");
+      return [...bytes].map((b) => `=${b.toString(16).toUpperCase().padStart(2, "0")}`).join("");
+    })
+    .replace(/=\n/g, "=\r\n")
+    // Soft line breaks at 76 chars
+    .replace(/(.{75})/g, "$1=\r\n");
+}
+
+/** RFC 2047 encoded-word for non-ASCII filenames */
+function encodeRFC2047(name: string) {
+  if (/^[\x20-\x7E]+$/.test(name)) return name; // ASCII — no encoding needed
+  return `=?utf-8?B?${b64(name)}?=`;
+}
+
+// ── Email HTML template ───────────────────────────────────────────────────────
 
 function buildEmailHtml(
   submissionId: string,
@@ -177,15 +244,12 @@ function buildEmailHtml(
     ["Material", quote.material],
     ["Quantity", String(quote.quantity)],
     ["Date needed", quote.dateNeeded],
-    [
-      "Preferred consult time",
-      quote.preferredConsultTime || "Not requested",
-    ],
+    ["Preferred consult time", quote.preferredConsultTime || "Not requested"],
     ["Notes", quote.notes || "None"],
     [
       "Files attached",
       files.length
-        ? files.map((f) => `${f.originalName} (${f.type})`).join(", ")
+        ? files.map((f) => `${f.originalName} (${(f.size / 1024).toFixed(0)} KB)`).join(", ")
         : "None",
     ],
   ];
@@ -219,7 +283,14 @@ function buildEmailHtml(
         <table style="border-collapse:collapse;width:100%">
           ${tableRows}
         </table>
-        <p style="margin-top:20px;font-size:12px;color:#9ca3af">
+        ${
+          files.length
+            ? `<p style="margin-top:16px;font-size:12px;color:#6b7280">
+                📎 ${files.length} file${files.length > 1 ? "s" : ""} attached to this email.
+               </p>`
+            : ""
+        }
+        <p style="margin-top:8px;font-size:12px;color:#9ca3af">
           Submitted via the Sign of the Times website quote form.
         </p>
       </div>
