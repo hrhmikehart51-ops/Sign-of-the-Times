@@ -5,6 +5,7 @@ export type QuotePayload = {
   customerName: string;
   email: string;
   phone: string;
+  orderType: string;
   productType: string;
   size: string;
   material: string;
@@ -82,6 +83,7 @@ export async function parseMultipartQuote(formData: FormData): Promise<ParsedQuo
     customerName: valueFromForm(formData, "customerName"),
     email: valueFromForm(formData, "email"),
     phone: valueFromForm(formData, "phone"),
+    orderType: valueFromForm(formData, "orderType"),
     productType: valueFromForm(formData, "productType"),
     size: valueFromForm(formData, "size"),
     material: valueFromForm(formData, "material"),
@@ -127,6 +129,7 @@ export async function parseJsonQuote(body: unknown): Promise<ParsedQuoteSubmissi
     customerName: String(source.customerName || "").trim(),
     email: String(source.email || "").trim(),
     phone: String(source.phone || "").trim(),
+    orderType: String(source.orderType || "").trim(),
     productType: String(source.productType || "").trim(),
     size: String(source.size || "").trim(),
     material: String(source.material || "").trim(),

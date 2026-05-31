@@ -34,6 +34,7 @@ type FormState = {
   customerName: string;
   email: string;
   phone: string;
+  orderType: string;
   productType: string;
   size: string;
   material: string;
@@ -49,6 +50,7 @@ const INITIAL: FormState = {
   customerName: "",
   email: "",
   phone: "",
+  orderType: "",
   productType: "Banners",
   size: "24×36 in",
   material: "Banner material",
@@ -189,6 +191,13 @@ export default function QuoteForm() {
 
           {/* Job specs */}
           <Section label="What do you need?">
+
+            <TogglePair
+              label="New design or reorder?"
+              value={form.orderType}
+              onChange={v => set("orderType", v)}
+              options={["New design", "Reorder"]}
+            />
 
             <Field label="Product type" error={errors.productType}>
               <select className={input(errors.productType)} value={form.productType}
@@ -332,11 +341,18 @@ export default function QuoteForm() {
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400">What happens next</p>
             <ol className="space-y-2">
-              {[
-                "We receive your request and reach out within one business day.",
-                "We'll go over your options — by phone or even better, in person at the shop.",
-                "You get a digital proof to approve before anything goes to press.",
-              ].map((step, i) => (
+              {(form.orderType === "Reorder"
+                ? [
+                    "We receive your request and reach out within one business day.",
+                    "We'll confirm your existing design and quantity — no proof needed unless you're making changes.",
+                    "Once confirmed, we go straight to print. Come pick it up when it's ready.",
+                  ]
+                : [
+                    "We receive your request and reach out within one business day.",
+                    "We'll go over your design — by phone or even better, in person at the shop.",
+                    "You get a digital proof to approve before anything goes to press. Every new design gets one.",
+                  ]
+              ).map((step, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-xs text-slate-500">
                   <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-marine/20 text-[10px] font-bold text-marine">
                     {i + 1}
@@ -345,6 +361,11 @@ export default function QuoteForm() {
                 </li>
               ))}
             </ol>
+            {form.orderType === "New design" && (
+              <p className="mt-3 rounded-lg bg-signal/10 px-3 py-2 text-xs font-medium text-ink">
+                ✓ Every new design includes a digital proof — you approve it before we print anything.
+              </p>
+            )}
           </div>
 
           {/* CTA */}

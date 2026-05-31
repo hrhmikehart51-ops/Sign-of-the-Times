@@ -123,6 +123,7 @@ function buildShopEmailHtml(
     ["Name", quote.customerName],
     ["Email", quote.email],
     ["Phone", quote.phone],
+    ...(quote.orderType ? [["Order type", quote.orderType] as [string, string]] : []),
     ["Product", quote.productType],
     ["Size", quote.size],
     ["Material", quote.material],
