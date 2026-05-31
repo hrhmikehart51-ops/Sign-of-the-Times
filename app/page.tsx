@@ -271,6 +271,15 @@ export default function Home() {
                 </svg>
               </a>
               <a
+                href="/design"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur transition hover:bg-white/10"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H7v-3a2 2 0 01.586-1.414z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Design a Sign
+              </a>
+              <a
                 href="tel:3608919477"
                 className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur transition hover:bg-white/10"
               >
@@ -527,33 +536,6 @@ export default function Home() {
           />
           <div className="mt-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-md md:p-10">
             <QuoteForm />
-          </div>
-        </div>
-      </section>
-
-      {/* ── Service area strip ───────────────────────────────────── */}
-      <section className="bg-white py-8">
-        <div className="mx-auto max-w-6xl px-5 text-center">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Serving</p>
-          <div className="mt-3 flex flex-wrap justify-center gap-3">
-            {[
-              "Vancouver, WA",
-              "Camas",
-              "Washougal",
-              "Battle Ground",
-              "Ridgefield",
-              "Portland, OR",
-              "Beaverton",
-              "Lake Oswego",
-              "Gresham",
-            ].map((city) => (
-              <span
-                key={city}
-                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500"
-              >
-                {city}
-              </span>
-            ))}
           </div>
         </div>
       </section>
